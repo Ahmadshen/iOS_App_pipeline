@@ -1,0 +1,32 @@
+workflows:
+  react-native-android:
+    name: React Native Android
+    max_build_duration: 120
+    instance_type: mac_mini_m1
+    environment:
+      java: 17
+      android_signing:
+        - keystore_reference
+    scripts:
+      - name: Install Node.js and npm
+        script: |
+          /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+          brew install node
+      - name: Install dependencies
+        script: |
+          npm install
+      - name: Set Android SDK location
+        script: |
+          echo "sdk.dir=$ANDROID_SDK_ROOT" > "$CM_BUILD_DIR/android/local.properties"
+      - name: Build Android release
+        script: |
+          curl -s "https://get.sdkman.io" | bash
+          source "$HOME/.sdkman/bin/sdkman-init.sh"
+          sdk version
+          sdk list java | grep 17.0.1-zulu || sdk install java 17.0.1-zulu
+          JAVA_HOME = /usr/lib/jvm/java-1.17.0-openjdk-amd64
+          cd android
+          ./gradlew assembleRelease
+    artifacts:
+      - android/app/build/outputs/apk/release/*.apk
+      - android/app/build/outputs/**/*.aab
